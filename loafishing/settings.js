@@ -20,6 +20,9 @@ class LoafishingSettings {
     };
     
     constructor (settings) {
+        if (!settings) {
+            settings = {};
+        }
         this.settings = settings;
     }
 
