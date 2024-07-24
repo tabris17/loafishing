@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<style>
+html { font-size: 14px; }
+fieldset { border: 1px solid grey; margin: 0.5rem 0; padding: 0.5rem; }
+legend { padding: 0 0.5rem; }
+datalist {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  writing-mode: horizontal-tb;
+  width: 100%;
+}
+label.is-half { width: calc(50% - 0.5rem); display: inline-block; }
+button { width: 5rem; }
+.is-off { filter: grayscale(100%); opacity: 50%; }
+</style>
+<script src="settings.js"></script>
+</head>
+<body style="width: 20rem;">
+    <figure style="margin: auto; display: block; width: 12rem; text-align: center;">
+        <img src="shutdown.svg" alt="Shutdown Button" width="64" height="64" id="shutdown" style="cursor: pointer;">
+        <figcaption id="status-text"></figcaption>
+    </figure>
+    <h1 style="font-size: 1rem;">Settings</h1>
+    <fieldset>
+        <legend>Target:</legend>
+        <label><input type="checkbox" id="process-image"><span>Image</span></label>
+        <label><input type="checkbox" id="process-video"><span>Video</span></label>
+        <label><input type="checkbox" id="process-background"><span>Background</span></label>
+    </fieldset>
+    <fieldset>
+        <legend>Opacity:</legend>
+        <input id="opacity" type="range" min="0" max="100" step="1" style="width: calc(100% - 0.5rem)" list="opacity-values">
+        <datalist id="opacity-values">
+            <option value="0" label="0"></option>
+            <option value="10" label="1"></option>
+            <option value="20" label="2"></option>
+            <option value="30" label="3"></option>
+            <option value="40" label="4"></option>
+            <option value="50" label="5"></option>
+            <option value="60" label="6"></option>
+            <option value="70" label="7"></option>
+            <option value="80" label="8"></option>
+            <option value="90" label="9"></option>
+            <option value="100" label="10"></option>
+        </datalist>
+    </fieldset>
+    <fieldset>
+        <legend>Filter:</legend>
+        <label><input type="radio" name="filter-mode" id="filter-all"><span>All</span></label>
+        <label><input type="radio" name="filter-mode" id="filter-include"><span>Include URLs:</span></label>
+        <label><input type="radio" name="filter-mode" id="filter-exclude"><span>Exclude URLs:</span></label>
+        <textarea id="url-list" style="width: calc(100% - 0.5rem); height: 6rem; margin-top: 0.5rem;" disabled placeholder="One URL pattern per line
+Wildcard char (*) is supported
+RegExp enclosed in slashes (/)"></textarea>
+    </fieldset>
+    <fieldset>
+        <legend>Enhancement:</legend>
+        <label><input type="checkbox" disabled><span>Enable Picture In Picture Mode</span></label>
+    </fieldset>
+    <p style="margin: 1rem auto; text-align: center;">
+        <button id="save">OK</button>
+        <button id="cancel">Cancel</button>    
+    </p>
+<script src="popup.js"></script>
+</body>
+</html>
