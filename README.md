@@ -5,4 +5,4 @@
 
 打开浏览器的”**管理扩展程序**“页面，开启”**开发人员模式**“，点击”**加载已解压的扩展程序**“按钮，选择安装本项目下的 *loafishing* 文件夹。
 
-![popup](assets\popup.png)
+![popup](assets/popup.png)
