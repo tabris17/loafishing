@@ -142,11 +142,7 @@ opacity: ${settings.opacity}%!important;
             return;
         }
         let elements = document.elementsFromPoint(event.clientX, event.clientY);
-        let indexOfImageOrVideo = elements.findIndex((el) => isLoafishingObject(el));
-        if (indexOfImageOrVideo <= 0) {
-            return;
-        }
-        for (let i = 0; i < indexOfImageOrVideo; i ++) {
+        for (let i = 0; i < elements.findIndex((el) => isLoafishingObject(el)); i ++) {
             elements[i].classList.add('loafishing-off');
         }
     }, { passive: true });
