@@ -117,19 +117,18 @@ opacity: ${settings.opacity}%!important;
         }
     };
 
-    new MutationObserver((mutationList) => {
-        mutationList.forEach((mutation) => {
-            if (mutation.type == 'childList') {
-                processBackground(mutation.target, settings);
-            }
-        });
-    }).observe(document.body, {
-        childList: true,
-        attributes: false,
-        subtree: true,
-    });
-
     if (settings.processBackground) {
+        new MutationObserver((mutationList) => {
+            mutationList.forEach((mutation) => {
+                if (mutation.type == 'childList') {
+                    processBackground(mutation.target, settings);
+                }
+            });
+        }).observe(document.body, {
+            childList: true,
+            attributes: false,
+            subtree: true,
+        });
         processBackground(document.body);
     }
 
