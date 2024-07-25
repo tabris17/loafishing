@@ -81,8 +81,9 @@ async function loafishing() {
         styleSheet.insertRule(`video { opacity: ${settings.opacity}%!important; }`, 0);
         styleSheet.insertRule('video:hover { opacity: 100%!important; }', 0);   
     }
-    styleSheet.insertRule('.loafishing { position: relative; background-image: none!important; }', 0);
-    styleSheet.insertRule(`.loafishing:before {
+    styleSheet.insertRule('.loafishing-off { pointer-events: none!important; }', 0);
+    styleSheet.insertRule('.loafishing-bg { position: relative; background-image: none!important; }', 0);
+    styleSheet.insertRule(`.loafishing-bg:before {
 content: ' ';
 display: block;
 position: absolute;
@@ -96,18 +97,18 @@ opacity: ${settings.opacity}%!important;
     let loafishingId = 1;
     const processBackground = (node) => {
         const reset = (element, isLoafishing) => {
-            return () => isLoafishing ? element.classList.add('loafishing') : element.classList.remove('loafishing');
+            return () => isLoafishing ? element.classList.add('loafishing-bg') : element.classList.remove('loafishing-bg');
         };
         for (let childNode of node.childNodes) {
             if (!childNode.tagName) continue;
             let computedStyle = getComputedStyle(childNode);
             let bgImgStyle = computedStyle.getPropertyValue('background-image');
             if (bgImgStyle && bgImgStyle.toString() != 'none') {
-                if (!childNode.classList.contains('loafishing')) {
+                if (!childNode.classList.contains('loafishing-bg')) {
                     let loafishingClass = `loafishing-${loafishingId ++}`;
                     let backgroundStyle = computedStyle.getPropertyValue('background');
                     styleSheet.insertRule(`.loafishing.${loafishingClass}:before { background: ${backgroundStyle.toString()}!important; }`, 0);
-                    childNode.classList.add('loafishing');
+                    childNode.classList.add('loafishing-bg');
                     childNode.classList.add(loafishingClass);
                     childNode.addEventListener('mouseover', reset(childNode, false));
                     childNode.addEventListener('mouseout', reset(childNode, true));
@@ -131,6 +132,24 @@ opacity: ${settings.opacity}%!important;
         });
         processBackground(document.body);
     }
+
+    const isLoafishingObject = (el) => {
+        let targetTagName = el.tagName.toUpperCase();
+        return (targetTagName == 'IMG' || targetTagName == 'VIDEO' || el.classList.contains('loafishing-bg'));
+    };
+    document.body.addEventListener('mousemove', (event) => {
+        if (isLoafishingObject(event.target)) {
+            return;
+        }
+        let elements = document.elementsFromPoint(event.clientX, event.clientY);
+        let indexOfImageOrVideo = elements.findIndex((el) => isLoafishingObject(el));
+        if (indexOfImageOrVideo <= 0) {
+            return;
+        }
+        for (let i = 0; i < indexOfImageOrVideo; i ++) {
+            elements[i].classList.add('loafishing-off');
+        }
+    }, { passive: true });
 
     return true;
 }
