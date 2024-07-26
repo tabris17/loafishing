@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
 <style>
-html { font-size: 14px; }
+html { font-size: 14px; user-select: none; }
 fieldset { border: 1px solid grey; margin: 0.5rem 0; padding: 0.5rem; }
 legend { padding: 0 0.5rem; }
 datalist {
@@ -58,7 +58,7 @@ RegExp enclosed in slashes (/)"></textarea>
     </fieldset>
     <fieldset>
         <legend>Enhancement:</legend>
-        <label><input type="checkbox" disabled><span>Enable Picture In Picture Mode</span></label>
+        <label><input type="checkbox" id="pip-mode"><span>Enable Picture In Picture Mode</span></label>
     </fieldset>
     <p style="margin: 1rem auto; text-align: center;">
         <button id="save">OK</button>

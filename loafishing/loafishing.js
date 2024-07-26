@@ -72,32 +72,164 @@ async function loafishing() {
         return false;
     }
 
+    let isPipEnable = settings.pipMode;
     const styleSheet = new CSSStyleSheet();
+    const PIP_WINDOW_BACKGROUND_COLOR = '#eee';
+    const PIP_WINDOW_BACKGROUND = `${PIP_WINDOW_BACKGROUND_COLOR} no-repeat center center/contain`;
     if (settings.processImage) {
         styleSheet.insertRule(`img { opacity: ${settings.opacity}%!important; }`, 0);
-        styleSheet.insertRule('img:hover { opacity: 100%!important; }', 0);   
+        if (!isPipEnable) {
+            styleSheet.insertRule('img:hover { opacity: 100%!important; }', 0);
+        }
     }
     if (settings.processVideo) {
         styleSheet.insertRule(`video { opacity: ${settings.opacity}%!important; }`, 0);
-        styleSheet.insertRule('video:hover { opacity: 100%!important; }', 0);   
+        if (!isPipEnable) {
+            styleSheet.insertRule('video:hover { opacity: 100%!important; }', 0);
+        }   
     }
     styleSheet.insertRule('.loafishing-off { pointer-events: none!important; }', 0);
     styleSheet.insertRule('.loafishing-bg { position: relative; background-image: none!important; }', 0);
     styleSheet.insertRule(`.loafishing-bg:before {
-content: ' ';
-display: block;
-position: absolute;
-left: 0; top: 0;
-width: 100%; height: 100%;
-opacity: ${settings.opacity}%!important;
-}`, 0);
-
+        content: ' ';
+        display: block;
+        position: absolute;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        opacity: ${settings.opacity}%!important;
+    }`, 0);
+    styleSheet.insertRule(`.loafishing-pip {
+        position: fixed;
+        z-index: 9999;
+        resize: both;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        border: none;
+        user-select: none;
+        background: ${PIP_WINDOW_BACKGROUND};
+    }`, 0);
+    styleSheet.insertRule('.loafishing-pip > video { opacity: 100%!important; }', 0);
+    styleSheet.insertRule(`.loafishing-pip-handler {
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-bottom-right-radius: 25px;
+        cursor: move;
+        width: 100%;
+        height: 100%;
+        float: left;
+    }`, 0);
+    styleSheet.insertRule(`.loafishing-pip-ctrl {
+        margin: 0;
+        padding: 0;
+        border: none;
+        width: 100%;
+        height: 28px;
+        text-align: center;
+        top: calc(50% - 14px);
+        position: relative;
+    }`, 0);
+    styleSheet.insertRule(`.loafishing-pip-ctrl > button {
+        margin: 0 2px;
+        width: 48px;
+        height: 26px;
+        background: white;
+        border: 1px solid #999;
+        border-radius: 4px;
+        color: gray;
+    }`, 0);
     document.adoptedStyleSheets.push(styleSheet);
+
+    if (isPipEnable) {
+        const pipStyleSheet = new CSSStyleSheet();
+        pipStyleSheet.insertRule('img:hover { opacity: 100%!important; }', 0);
+        pipStyleSheet.insertRule('video:hover { opacity: 100%!important; }', 0);
+        const togglePip = () => {
+            if (isPipEnable) {
+                document.adoptedStyleSheets.push(pipStyleSheet);
+            } else {
+                document.adoptedStyleSheets.pop();
+            }
+            isPipEnable = !isPipEnable;
+            return isPipEnable;
+        };
+        const SAVE_PIP_OPTIONS_DELAY = 500;
+        let savePipOptionsTimeoutId = 0;
+        const delaySavePipOptions = () => {
+            if (savePipOptionsTimeoutId > 0) {
+                clearTimeout(savePipOptionsTimeoutId);
+            }
+            savePipOptionsTimeoutId = setTimeout(() => {
+                savePipOptionsTimeoutId = 0;
+                settings.pipOptions = {
+                    width: pipWindow.clientWidth,
+                    height: pipWindow.clientHeight,
+                    top: pipWindow.offsetTop,
+                    left: pipWindow.offsetLeft,
+                };
+                settings.save().catch((error) => console.error(error));
+            }, SAVE_PIP_OPTIONS_DELAY);
+        };
+        let isMousedown = false, isResizing = false;
+        let startX, startY;
+        var pipWindow = document.createElement('DIV');
+        var pipHandler = document.createElement('DIV');
+        var pipControlBar = document.createElement('DIV');
+        let pipSwitcher = document.createElement('BUTTON');
+        let pipOptions = settings.pipOptions;
+        pipWindow.classList.add('loafishing-pip');
+        pipWindow.style.width = `${pipOptions.width}px`;
+        pipWindow.style.height = `${pipOptions.height}px`;
+        pipWindow.style.top = `${pipOptions.top}px`;
+        pipWindow.style.left = `${pipOptions.left}px`;
+        pipHandler.classList.add('loafishing-pip-handler');
+        pipWindow.appendChild(pipHandler);
+        pipHandler.addEventListener('mousedown', (event) => {
+            startX = event.clientX - pipWindow.offsetLeft;
+            startY = event.clientY - pipWindow.offsetTop;
+            isMousedown = true;
+        });
+        pipControlBar.appendChild(pipSwitcher);
+        pipControlBar.classList.add('loafishing-pip-ctrl');
+        pipSwitcher.innerText = 'OFF';
+        pipSwitcher.addEventListener('click', () => pipSwitcher.innerText = togglePip() ? 'OFF' : 'ON');
+        pipHandler.appendChild(pipControlBar);
+        document.body.addEventListener('mouseup', () => {
+            startX = 0;
+            startY = 0;
+            isMousedown = false;
+        });
+        document.body.addEventListener('mousemove', (event) => {
+            if (!isMousedown) return;
+            pipWindow.style.left = `${event.clientX - startX}px`;
+            pipWindow.style.top = `${event.clientY - startY}px`;
+            delaySavePipOptions();
+        });
+        window.addEventListener('resize', () => {
+            let isModified = false;
+            if (pipWindow.clientWidth + pipWindow.offsetLeft > window.innerWidth) {
+                pipWindow.style.left = `${window.innerWidth - pipWindow.clientWidth}px`;
+                isModified = true;
+            }
+            if (pipWindow.clientHeight + pipWindow.offsetTop > window.innerHeight) {
+                pipWindow.style.top = `${window.innerHeight - pipWindow.clientHeight}px`;
+                isModified = true;
+            }
+            if (isModified) {
+                delaySavePipOptions();
+            }
+        });
+
+        new ResizeObserver(delaySavePipOptions).observe(pipWindow);
+
+        document.body.appendChild(pipWindow);
+    }
 
     let loafishingId = 1;
     const processBackground = (node) => {
         const reset = (element, isLoafishing) => {
-            return () => isLoafishing ? element.classList.add('loafishing-bg') : element.classList.remove('loafishing-bg');
+            return () => isLoafishing ? element.classList.add('loafishing-bg') : (!isPipEnable && element.classList.remove('loafishing-bg'));
         };
         for (let childNode of node.childNodes) {
             if (!childNode.tagName) continue;
@@ -105,11 +237,12 @@ opacity: ${settings.opacity}%!important;
             let bgImgStyle = computedStyle.getPropertyValue('background-image');
             if (bgImgStyle && bgImgStyle.toString() != 'none') {
                 if (!childNode.classList.contains('loafishing-bg')) {
-                    let loafishingClass = `loafishing-${loafishingId ++}`;
-                    let backgroundStyle = computedStyle.getPropertyValue('background');
-                    styleSheet.insertRule(`.loafishing.${loafishingClass}:before { background: ${backgroundStyle.toString()}!important; }`, 0);
+                    let loafishingClass = `loafishing-bg-${loafishingId ++}`;
+                    let backgroundStyle = computedStyle.getPropertyValue('background').toString();
+                    styleSheet.insertRule(`.loafishing-bg.${loafishingClass}:before { background: ${backgroundStyle}!important; }`, 0);
                     childNode.classList.add('loafishing-bg');
                     childNode.classList.add(loafishingClass);
+                    childNode.dataset.loafishing = backgroundStyle;
                     childNode.addEventListener('mouseover', reset(childNode, false));
                     childNode.addEventListener('mouseout', reset(childNode, true));
                 }
@@ -133,18 +266,87 @@ opacity: ${settings.opacity}%!important;
         processBackground(document.body);
     }
 
+    let pipVideo;
     const isLoafishingObject = (el) => {
         let targetTagName = el.tagName.toUpperCase();
-        return (targetTagName == 'IMG' || targetTagName == 'VIDEO' || el.classList.contains('loafishing-bg'));
+        if (targetTagName == 'IMG' || targetTagName == 'VIDEO') {
+            return true;
+        }
+        for (let className of el.classList) {
+            if (className.startsWith('loafishing')) {
+                return true;
+            }
+        }
+        return false;
     };
-    document.body.addEventListener('mousemove', (event) => {
-        if (isLoafishingObject(event.target)) {
+    const isImage = (el) => el.tagName.toUpperCase() == 'IMG';
+    const isVideo = (el) => el.tagName.toUpperCase() == 'VIDEO';
+    const isBackground = (el) => el.classList.contains('loafishing-bg');
+    const isPipWindow = (el) => (el == pipWindow || el == pipHandler || el == pipControlBar || el.parentNode == pipControlBar);
+    const restorePipVideo = () => {
+        if (pipVideo) {
+            let [video, parent, placeholder] = pipVideo;
+            parent.replaceChild(video, placeholder);
+            placeholder.remove();
+            pipVideo = null;
+        }
+    };
+    const restorePipWindow = () => {
+        pipWindow.style.background = PIP_WINDOW_BACKGROUND;
+        pipControlBar.style.display = 'block';
+        restorePipVideo();
+    };
+    document.body.addEventListener('mousemove', async (event) => {
+        if (!isPipEnable) return;
+        let targetElement = event.target;
+        if (isPipWindow(targetElement)) return;
+        if (isLoafishingObject(targetElement)) {
+            if (pipWindow) {
+                pipControlBar.style.display = 'none';
+                if (isImage(targetElement)) {
+                    pipWindow.style.backgroundImage = `url("${targetElement.src}")`;
+                } else if (isVideo(targetElement)) {
+                    if (pipVideo) {
+                        if (pipVideo[0] == targetElement) {
+                            return;
+                        } else {
+                            restorePipVideo();
+                        }
+                    }
+                    let parent = targetElement.parentNode;
+                    let placeholder = document.createElement('IMG');
+                    placeholder.width = targetElement.clientWidth;
+                    placeholder.height = targetElement.clientHeight;
+                    pipVideo = [targetElement, parent, placeholder];
+                    parent.replaceChild(placeholder, targetElement);
+                    pipWindow.appendChild(targetElement);
+                } else if (isBackground(targetElement)) {
+                    pipWindow.style.background = targetElement.dataset.loafishing;
+                    pipWindow.style.backgroundColor = PIP_WINDOW_BACKGROUND_COLOR;
+                }
+            }
             return;
         }
-        let elements = document.elementsFromPoint(event.clientX, event.clientY);
-        for (let i = 0; i < elements.findIndex((el) => isLoafishingObject(el)); i ++) {
-            elements[i].classList.add('loafishing-off');
+        if (event.ctrlKey) {
+            let elements = document.elementsFromPoint(event.clientX, event.clientY);
+            let i = 0;
+            for (; i < elements.findIndex((el) => isLoafishingObject(el)); i ++) { 
+                elements[i].classList.add('loafishing-off');
+            }
+            if (i > 0) {
+                let offedElements = elements.slice(0, i);
+                const handleRestoreOffed = ((elements) => {
+                    return (event) => {
+                        if (event.key == 'Control') {
+                            elements.forEach((el) => el.classList.remove('loafishing-off'));
+                            document.removeEventListener('keyup', handleRestoreOffed);    
+                        }
+                    };
+                })(offedElements);
+                document.addEventListener('keyup', handleRestoreOffed);
+            }
         }
+        restorePipWindow();
     }, { passive: true });
 
     return true;

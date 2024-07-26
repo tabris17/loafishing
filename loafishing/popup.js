@@ -16,6 +16,7 @@
         $statusText = $('status-text'),
         $shutdown = $('shutdown'),
         $urlList = $('url-list'),
+        $pipMode = $('pip-mode'),
         $cancel = $('cancel'),
         $save = $('save');
 
@@ -37,6 +38,7 @@
         } else {
             settings.filterMode = LoafishingSettings.FILTER_MODE_ALL;
         }
+        settings.pipMode = $pipMode.checked;
         await settings.save();
     };
     const updateShutdownButton = () => {
@@ -100,6 +102,7 @@
         default:
             $filterAll.checked = true;
     }
+    $pipMode.checked = settings.pipMode;
 
     $cancel.addEventListener('click', () => window.close());
     $save.addEventListener('click', async () => {

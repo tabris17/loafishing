@@ -17,6 +17,12 @@ class LoafishingSettings {
         processBackground: true,
         processVideo: true,
         pipMode: false,
+        pipOptions: {
+            width: 160,
+            height: 120,
+            left: 5,
+            top: 5,
+        },
     };
     
     constructor (settings) {
@@ -24,6 +30,26 @@ class LoafishingSettings {
             settings = {};
         }
         this.settings = settings;
+    }
+
+    get pipOptions() {
+        return this.settings.pipOptions || this.defaultValues.pipOptions;
+    }
+
+    set pipOptions(value) {
+        if (!value) {
+            return;
+        }
+        this.settings.pipOptions = Object.assign(this.pipOptions, value);    
+    }
+
+    get pipMode() {
+        let value = this.settings.pipMode;
+        return value == undefined ? this.defaultValues.pipMode : value;
+    }
+
+    set pipMode(value) {
+        this.settings.pipMode = value ? true : false;
     }
 
     get enable() {
