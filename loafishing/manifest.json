@@ -16,6 +16,12 @@
     },
     "content_scripts": [
         {
+            "css": ["loafishing.css"],
+            "matches": ["*://*/*"],
+            "run_at": "document_start",
+            "all_frames": true
+        },
+        {
             "js": ["settings.js", "loafishing.js"],
             "matches": ["*://*/*"],
             "run_at": "document_end",
@@ -24,5 +30,11 @@
     ],
     "permissions": [
         "storage"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["iconfont.ttf"],
+            "matches": ["*://*/*"]
+        }
     ]
 }

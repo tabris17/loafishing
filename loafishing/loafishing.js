@@ -98,7 +98,7 @@ async function loafishing() {
         width: 100%; height: 100%;
         opacity: ${settings.opacity}%!important;
     }`, 0);
-    styleSheet.insertRule(`.loafishing-pip {
+    styleSheet.insertRule(`.loafishing-pip-win {
         position: fixed;
         z-index: 9999;
         resize: both;
@@ -109,7 +109,7 @@ async function loafishing() {
         user-select: none;
         background: ${PIP_WINDOW_BACKGROUND};
     }`, 0);
-    styleSheet.insertRule('.loafishing-pip > video { opacity: 100%!important; }', 0);
+    styleSheet.insertRule('.loafishing-pip-win > video { opacity: 100%!important; }', 0);
     styleSheet.insertRule(`.loafishing-pip-handler {
         margin: 0;
         padding: 0;
@@ -132,15 +132,20 @@ async function loafishing() {
     }`, 0);
     styleSheet.insertRule(`.loafishing-pip-ctrl > button {
         margin: 0 2px;
-        width: 48px;
+        width: 26px;
         height: 26px;
         background: white;
         border: 1px solid #999;
         border-radius: 4px;
         color: gray;
+        font-size: 20px;
     }`, 0);
     document.adoptedStyleSheets.push(styleSheet);
-
+    
+    const isImage = (el) => el.tagName.toUpperCase() == 'IMG';
+    const isVideo = (el) => el.tagName.toUpperCase() == 'VIDEO';
+    const isBackground = (el) => el.classList.contains('loafishing-bg');
+    const isPipWindow = (el) => el.classList.contains('loafishing-pip');
     if (isPipEnable) {
         const pipStyleSheet = new CSSStyleSheet();
         pipStyleSheet.insertRule('img:hover { opacity: 100%!important; }', 0);
@@ -163,38 +168,76 @@ async function loafishing() {
             savePipOptionsTimeoutId = setTimeout(() => {
                 savePipOptionsTimeoutId = 0;
                 settings.pipOptions = {
-                    width: pipWindow.clientWidth,
-                    height: pipWindow.clientHeight,
-                    top: pipWindow.offsetTop,
-                    left: pipWindow.offsetLeft,
+                    width: $pipWindow.clientWidth,
+                    height: $pipWindow.clientHeight,
+                    top: $pipWindow.offsetTop,
+                    left: $pipWindow.offsetLeft,
                 };
                 settings.save().catch((error) => console.error(error));
             }, SAVE_PIP_OPTIONS_DELAY);
         };
-        let isMousedown = false, isResizing = false;
-        let startX, startY;
-        var pipWindow = document.createElement('DIV');
-        var pipHandler = document.createElement('DIV');
-        var pipControlBar = document.createElement('DIV');
-        let pipSwitcher = document.createElement('BUTTON');
+        var $pipWindow;
+        var $pipHandler;
+        var $pipControlBar;
+        let $pipSwitcher, $pipClose, $pipExternal;
         let pipOptions = settings.pipOptions;
-        pipWindow.classList.add('loafishing-pip');
-        pipWindow.style.width = `${pipOptions.width}px`;
-        pipWindow.style.height = `${pipOptions.height}px`;
-        pipWindow.style.top = `${pipOptions.top}px`;
-        pipWindow.style.left = `${pipOptions.left}px`;
-        pipHandler.classList.add('loafishing-pip-handler');
-        pipWindow.appendChild(pipHandler);
-        pipHandler.addEventListener('mousedown', (event) => {
-            startX = event.clientX - pipWindow.offsetLeft;
-            startY = event.clientY - pipWindow.offsetTop;
-            isMousedown = true;
-        });
-        pipControlBar.appendChild(pipSwitcher);
-        pipControlBar.classList.add('loafishing-pip-ctrl');
-        pipSwitcher.innerText = 'OFF';
-        pipSwitcher.addEventListener('click', () => pipSwitcher.innerText = togglePip() ? 'OFF' : 'ON');
-        pipHandler.appendChild(pipControlBar);
+        let isMousedown = false;
+        let startX, startY;
+        const createPipWindow = () => {
+            $pipWindow = document.createElement('DIV');
+            $pipHandler = document.createElement('DIV');
+            $pipControlBar = document.createElement('DIV');
+            $pipSwitcher = document.createElement('BUTTON');
+            $pipClose = document.createElement('BUTTON');
+            $pipExternal = document.createElement('BUTTON');
+            $pipWindow.classList.add('loafishing-pip', 'loafishing-pip-win');
+            $pipWindow.style.width = `${Math.max(pipOptions.width, 100)}px`;
+            $pipWindow.style.height = `${Math.max(pipOptions.height, 100)}px`;
+            $pipWindow.style.top = `${pipOptions.top}px`;
+            $pipWindow.style.left = `${pipOptions.left}px`;
+            $pipHandler.classList.add('loafishing-pip', 'loafishing-pip-handler');
+            $pipWindow.appendChild($pipHandler);
+            $pipHandler.addEventListener('mousedown', (event) => {
+                startX = event.clientX - $pipWindow.offsetLeft;
+                startY = event.clientY - $pipWindow.offsetTop;
+                isMousedown = true;
+            });
+            $pipControlBar.classList.add('loafishing-pip', 'loafishing-pip-ctrl');
+            $pipSwitcher.classList.add('loafishing-pip', 'loafishing-icon', 'loafishing-icon-invisible');
+            $pipSwitcher.title = 'Turn On/Off Picture In Picture Preview'
+            $pipSwitcher.addEventListener('click', () => {
+                if (togglePip()) {
+                    $pipSwitcher.classList.remove('loafishing-icon-visible');
+                    $pipSwitcher.classList.add('loafishing-icon-invisible');
+                } else {
+                    $pipSwitcher.classList.remove('loafishing-icon-invisible');
+                    $pipSwitcher.classList.add('loafishing-icon-visible');
+                }
+            });
+            $pipClose.classList.add('loafishing-pip', 'loafishing-icon', 'loafishing-icon-close');
+            $pipClose.title = 'Close Picture In Picture Window';
+            $pipClose.addEventListener('click', () => {
+                $pipWindow.style.visibility = 'hidden';
+                if (isPipEnable) {
+                    togglePip();
+                }
+            });
+            $pipExternal.classList.add('loafishing-pip', 'loafishing-icon', 'loafishing-icon-external');
+            $pipExternal.title = 'Open External Picture In Picture Window';
+            $pipExternal.addEventListener('click', async () => {
+                let externalPipWindow = documentPictureInPicture.window || await  documentPictureInPicture.requestWindow({
+                    width: pipOptions.width,
+                    height: pipOptions.height,
+                    disallowReturnToOpener: false,
+                });
+                externalPipWindow.document.body.append($pipWindow);
+            });
+            $pipControlBar.appendChild($pipSwitcher);
+            $pipControlBar.appendChild($pipExternal);
+            $pipControlBar.appendChild($pipClose);
+            $pipHandler.appendChild($pipControlBar);
+        };
+        createPipWindow();
         document.body.addEventListener('mouseup', () => {
             startX = 0;
             startY = 0;
@@ -202,18 +245,18 @@ async function loafishing() {
         });
         document.body.addEventListener('mousemove', (event) => {
             if (!isMousedown) return;
-            pipWindow.style.left = `${event.clientX - startX}px`;
-            pipWindow.style.top = `${event.clientY - startY}px`;
+            $pipWindow.style.left = `${event.clientX - startX}px`;
+            $pipWindow.style.top = `${event.clientY - startY}px`;
             delaySavePipOptions();
         });
         window.addEventListener('resize', () => {
             let isModified = false;
-            if (pipWindow.clientWidth + pipWindow.offsetLeft > window.innerWidth) {
-                pipWindow.style.left = `${window.innerWidth - pipWindow.clientWidth}px`;
+            if ($pipWindow.clientWidth + $pipWindow.offsetLeft > window.innerWidth) {
+                $pipWindow.style.left = `${window.innerWidth - $pipWindow.clientWidth}px`;
                 isModified = true;
             }
-            if (pipWindow.clientHeight + pipWindow.offsetTop > window.innerHeight) {
-                pipWindow.style.top = `${window.innerHeight - pipWindow.clientHeight}px`;
+            if ($pipWindow.clientHeight + $pipWindow.offsetTop > window.innerHeight) {
+                $pipWindow.style.top = `${window.innerHeight - $pipWindow.clientHeight}px`;
                 isModified = true;
             }
             if (isModified) {
@@ -221,9 +264,8 @@ async function loafishing() {
             }
         });
 
-        new ResizeObserver(delaySavePipOptions).observe(pipWindow);
-
-        document.body.appendChild(pipWindow);
+        new ResizeObserver(delaySavePipOptions).observe($pipWindow);
+        document.body.appendChild($pipWindow);
     }
 
     let loafishingId = 1;
@@ -236,7 +278,7 @@ async function loafishing() {
             let computedStyle = getComputedStyle(childNode);
             let bgImgStyle = computedStyle.getPropertyValue('background-image');
             if (bgImgStyle && bgImgStyle.toString() != 'none') {
-                if (!childNode.classList.contains('loafishing-bg')) {
+                if (!childNode.classList.contains('loafishing-bg') && !isPipWindow(childNode)) {
                     let loafishingClass = `loafishing-bg-${loafishingId ++}`;
                     let backgroundStyle = computedStyle.getPropertyValue('background').toString();
                     styleSheet.insertRule(`.loafishing-bg.${loafishingClass}:before { background: ${backgroundStyle}!important; }`, 0);
@@ -279,10 +321,6 @@ async function loafishing() {
         }
         return false;
     };
-    const isImage = (el) => el.tagName.toUpperCase() == 'IMG';
-    const isVideo = (el) => el.tagName.toUpperCase() == 'VIDEO';
-    const isBackground = (el) => el.classList.contains('loafishing-bg');
-    const isPipWindow = (el) => (el == pipWindow || el == pipHandler || el == pipControlBar || el.parentNode == pipControlBar);
     const restorePipVideo = () => {
         if (pipVideo) {
             let [video, parent, placeholder] = pipVideo;
@@ -292,8 +330,8 @@ async function loafishing() {
         }
     };
     const restorePipWindow = () => {
-        pipWindow.style.background = PIP_WINDOW_BACKGROUND;
-        pipControlBar.style.display = 'block';
+        $pipWindow.style.background = PIP_WINDOW_BACKGROUND;
+        $pipControlBar.style.display = 'block';
         restorePipVideo();
     };
     document.body.addEventListener('mousemove', async (event) => {
@@ -301,10 +339,10 @@ async function loafishing() {
         let targetElement = event.target;
         if (isPipWindow(targetElement)) return;
         if (isLoafishingObject(targetElement)) {
-            if (pipWindow) {
-                pipControlBar.style.display = 'none';
+            if ($pipWindow) {
+                $pipControlBar.style.display = 'none';
                 if (isImage(targetElement)) {
-                    pipWindow.style.backgroundImage = `url("${targetElement.src}")`;
+                    $pipWindow.style.backgroundImage = `url("${targetElement.src}")`;
                 } else if (isVideo(targetElement)) {
                     if (pipVideo) {
                         if (pipVideo[0] == targetElement) {
@@ -319,10 +357,10 @@ async function loafishing() {
                     placeholder.height = targetElement.clientHeight;
                     pipVideo = [targetElement, parent, placeholder];
                     parent.replaceChild(placeholder, targetElement);
-                    pipWindow.appendChild(targetElement);
+                    $pipWindow.appendChild(targetElement);
                 } else if (isBackground(targetElement)) {
-                    pipWindow.style.background = targetElement.dataset.loafishing;
-                    pipWindow.style.backgroundColor = PIP_WINDOW_BACKGROUND_COLOR;
+                    $pipWindow.style.background = targetElement.dataset.loafishing;
+                    $pipWindow.style.backgroundColor = PIP_WINDOW_BACKGROUND_COLOR;
                 }
             }
             return;

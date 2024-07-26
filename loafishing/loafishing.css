@@ -1,0 +1,27 @@
+@font-face {
+    font-family: "loafishing-icon";
+    src: url('chrome-extension://__MSG_@@extension_id__/iconfont.ttf') format('truetype');
+}
+  
+.loafishing-icon {
+    font-family: "loafishing-icon"!important;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+  
+.loafishing-icon-invisible:before {
+    content: "\e69f";
+}
+  
+.loafishing-icon-visible:before {
+    content: "\e626";
+}
+  
+.loafishing-icon-close:before {
+    content: "\e60e";
+}
+  
+.loafishing-icon-external:before {
+    content: "\e85f";
+}
