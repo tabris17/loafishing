@@ -2,7 +2,7 @@
     "name": "Loafishing: loafing around everyday",
     "short_name": "Loafishing",
     "description": "Ask not what your company can do for you, but what together we can do for loafing on the job.",
-    "version": "1.0",
+    "version": "2.0",
     "manifest_version": 3,
     "icons": {
         "16": "icon-16x16.png",
