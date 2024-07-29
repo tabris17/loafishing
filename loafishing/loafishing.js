@@ -230,7 +230,13 @@ async function loafishing() {
                     height: pipOptions.height,
                     disallowReturnToOpener: false,
                 });
+                externalPipWindow.document.head.innerHTML = `<style>
+                    body { padding: 0; margin: 0; }
+                    button { display: none; }
+                    .loafishing-pip-win { width: 100%!important; height: 100%!important; }
+                </style>`;
                 externalPipWindow.document.body.append($pipWindow);
+                externalPipWindow.onunload = () => document.body.append($pipWindow);
             });
             $pipControlBar.appendChild($pipSwitcher);
             $pipControlBar.appendChild($pipExternal);

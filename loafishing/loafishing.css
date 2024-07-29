@@ -8,20 +8,22 @@
     font-style: normal;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    padding: 0;
+    margin: 0;
 }
-  
+
 .loafishing-icon-invisible:before {
     content: "\e69f";
 }
-  
+
 .loafishing-icon-visible:before {
     content: "\e626";
 }
-  
+
 .loafishing-icon-close:before {
     content: "\e60e";
 }
-  
+
 .loafishing-icon-external:before {
     content: "\e85f";
 }
