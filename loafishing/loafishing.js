@@ -109,7 +109,7 @@ async function loafishing() {
         user-select: none;
         background: ${PIP_WINDOW_BACKGROUND};
     }`, 0);
-    styleSheet.insertRule('.loafishing-pip-win > video { opacity: 100%!important; }', 0);
+    styleSheet.insertRule('.loafishing-pip-win > video { opacity: 100%!important; width: 100%!important; height: 100%!important; }', 0);
     styleSheet.insertRule(`.loafishing-pip-handler {
         margin: 0;
         padding: 0;
