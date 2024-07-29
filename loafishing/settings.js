@@ -18,10 +18,10 @@ class LoafishingSettings {
         processVideo: true,
         pipMode: false,
         pipOptions: {
-            width: 160,
-            height: 120,
-            left: 5,
-            top: 5,
+            width: 0,
+            height: 0,
+            left: 0,
+            top: 0,
         },
     };
     

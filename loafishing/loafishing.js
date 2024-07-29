@@ -121,17 +121,15 @@ async function loafishing() {
         float: left;
     }`, 0);
     styleSheet.insertRule(`.loafishing-pip-ctrl {
-        margin: 0;
+        margin: -30px 0;
         padding: 0;
         border: none;
-        width: 100%;
         height: 28px;
-        text-align: center;
-        top: calc(50% - 14px);
-        position: relative;
+        width: 90px;
+        position: fixed;
     }`, 0);
     styleSheet.insertRule(`.loafishing-pip-ctrl > button {
-        margin: 0 2px;
+        margin: 0 2px 0 0;
         width: 26px;
         height: 26px;
         background: white;
@@ -153,8 +151,11 @@ async function loafishing() {
         const togglePip = () => {
             if (isPipEnable) {
                 document.adoptedStyleSheets.push(pipStyleSheet);
+                $pipWindow.dataset.height = $pipWindow.clientHeight;
+                $pipWindow.style.height = '0';
             } else {
                 document.adoptedStyleSheets.pop();
+                $pipWindow.style.height = `${$pipWindow.dataset.height}px`;
             }
             isPipEnable = !isPipEnable;
             return isPipEnable;
@@ -191,11 +192,12 @@ async function loafishing() {
             $pipClose = document.createElement('BUTTON');
             $pipExternal = document.createElement('BUTTON');
             $pipWindow.classList.add('loafishing-pip', 'loafishing-pip-win');
-            $pipWindow.style.width = `${Math.max(pipOptions.width, 100)}px`;
-            $pipWindow.style.height = `${Math.max(pipOptions.height, 100)}px`;
-            $pipWindow.style.top = `${pipOptions.top}px`;
-            $pipWindow.style.left = `${pipOptions.left}px`;
+            $pipWindow.style.width = `${Math.max(pipOptions.width, 120)}px`;
+            $pipWindow.style.height = `${Math.max(pipOptions.height, 120)}px`;
+            $pipWindow.style.top = `${Math.max(pipOptions.top, 32)}px`;
+            $pipWindow.style.left = `${Math.max(pipOptions.left, 4)}px`;
             $pipHandler.classList.add('loafishing-pip', 'loafishing-pip-handler');
+            $pipWindow.appendChild($pipControlBar);
             $pipWindow.appendChild($pipHandler);
             $pipHandler.addEventListener('mousedown', (event) => {
                 startX = event.clientX - $pipWindow.offsetLeft;
@@ -225,9 +227,14 @@ async function loafishing() {
             $pipExternal.classList.add('loafishing-pip', 'loafishing-icon', 'loafishing-icon-external');
             $pipExternal.title = 'Open External Picture In Picture Window';
             $pipExternal.addEventListener('click', async () => {
+                if (!isPipEnable) {
+                    togglePip();
+                    $pipSwitcher.classList.remove('loafishing-icon-visible');
+                    $pipSwitcher.classList.add('loafishing-icon-invisible');
+                }
                 let externalPipWindow = documentPictureInPicture.window || await  documentPictureInPicture.requestWindow({
                     width: pipOptions.width,
-                    height: pipOptions.height,
+                    height: pipOptions.height || $pipWindow.dataset.height,
                     disallowReturnToOpener: false,
                 });
                 externalPipWindow.document.head.innerHTML = `<style>
@@ -241,7 +248,6 @@ async function loafishing() {
             $pipControlBar.appendChild($pipSwitcher);
             $pipControlBar.appendChild($pipExternal);
             $pipControlBar.appendChild($pipClose);
-            $pipHandler.appendChild($pipControlBar);
         };
         createPipWindow();
         document.body.addEventListener('mouseup', () => {
@@ -337,7 +343,6 @@ async function loafishing() {
     };
     const restorePipWindow = () => {
         $pipWindow.style.background = PIP_WINDOW_BACKGROUND;
-        $pipControlBar.style.display = 'block';
         restorePipVideo();
     };
     document.body.addEventListener('mousemove', async (event) => {
@@ -346,7 +351,6 @@ async function loafishing() {
         if (isPipWindow(targetElement)) return;
         if (isLoafishingObject(targetElement)) {
             if ($pipWindow) {
-                $pipControlBar.style.display = 'none';
                 if (isImage(targetElement)) {
                     $pipWindow.style.backgroundImage = `url("${targetElement.src}")`;
                 } else if (isVideo(targetElement)) {
