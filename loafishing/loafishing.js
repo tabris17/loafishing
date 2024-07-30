@@ -174,7 +174,7 @@ async function loafishing() {
                     top: $pipWindow.offsetTop,
                     left: $pipWindow.offsetLeft,
                 };
-                settings.save().catch((error) => console.error(error));
+                settings.saveLocal().catch((error) => console.error(error));
             }, SAVE_PIP_OPTIONS_DELAY);
         };
         var $pipWindow;

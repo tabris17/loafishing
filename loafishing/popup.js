@@ -39,7 +39,7 @@
             settings.filterMode = LoafishingSettings.FILTER_MODE_ALL;
         }
         settings.pipMode = $pipMode.checked;
-        await settings.save();
+        await settings.saveGlobal();
     };
     const updateShutdownButton = () => {
         if (settings.enable) {

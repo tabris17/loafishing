@@ -18,51 +18,49 @@ class LoafishingSettings {
         processVideo: true,
         pipMode: false,
         pipOptions: {
-            width: 0,
             height: 0,
+            width: 0,
             left: 0,
             top: 0,
         },
     };
     
-    constructor (settings) {
-        if (!settings) {
-            settings = {};
-        }
-        this.settings = settings;
+    constructor (globalSettings, localSettings) {
+        this.globalSettings = globalSettings || {};
+        this.localSettings = localSettings || {};
     }
 
     get pipOptions() {
-        return this.settings.pipOptions || this.defaultValues.pipOptions;
+        return this.localSettings.pipOptions || this.defaultValues.pipOptions;
     }
 
     set pipOptions(value) {
         if (!value) {
             return;
         }
-        this.settings.pipOptions = Object.assign(this.pipOptions, value);    
+        this.localSettings.pipOptions = Object.assign(this.pipOptions, value);    
     }
 
     get pipMode() {
-        let value = this.settings.pipMode;
+        let value = this.globalSettings.pipMode;
         return value == undefined ? this.defaultValues.pipMode : value;
     }
 
     set pipMode(value) {
-        this.settings.pipMode = value ? true : false;
+        this.globalSettings.pipMode = value ? true : false;
     }
 
     get enable() {
-        let value = this.settings.enable;
+        let value = this.globalSettings.enable;
         return value == undefined ? this.defaultValues.enable : value;
     }
 
     set enable(value) {
-        this.settings.enable = value ? true : false;
+        this.globalSettings.enable = value ? true : false;
     }
 
     get opacity() {
-        return this.settings.opacity || this.defaultValues.opacity;
+        return this.globalSettings.opacity || this.defaultValues.opacity;
     }
 
     set opacity(value) {
@@ -71,11 +69,11 @@ class LoafishingSettings {
         } else if (value > 100) {
             value = 100;
         }
-        this.settings.opacity = value;
+        this.globalSettings.opacity = value;
     }
 
     get filterMode() {
-        let value = this.settings.filterMode;
+        let value = this.globalSettings.filterMode;
         return value == undefined ? this.defaultValues.filterMode : value;
     }
 
@@ -83,62 +81,75 @@ class LoafishingSettings {
         switch (value) {
             case LoafishingSettings.FILTER_MODE_INCLUDE:
             case LoafishingSettings.FILTER_MODE_EXCLUDE:
-                this.settings.filterMode = value;
+                this.globalSettings.filterMode = value;
                 break;
             default:
-                this.settings.filterMode = LoafishingSettings.FILTER_MODE_ALL;
+                this.globalSettings.filterMode = LoafishingSettings.FILTER_MODE_ALL;
         }
     }
 
     get processImage() {
-        let value = this.settings.processImage;
+        let value = this.globalSettings.processImage;
         return value == undefined ? this.defaultValues.processImage : value;
     }
 
     set processImage(value) {
-        this.settings.processImage = value ? true : false;
+        this.globalSettings.processImage = value ? true : false;
     }
 
     get processBackground() {
-        let value = this.settings.processBackground;
+        let value = this.globalSettings.processBackground;
         return value == undefined ? this.defaultValues.processBackground : value;
     }
 
     set processBackground(value) {
-        this.settings.processBackground = value ? true : false;
+        this.globalSettings.processBackground = value ? true : false;
     }
 
     get processVideo() {
-        let value = this.settings.processVideo;
+        let value = this.globalSettings.processVideo;
         return value == undefined ? this.defaultValues.processVideo : value;
     }
 
     set processVideo(value) {
-        this.settings.processVideo = value ? true : false;
+        this.globalSettings.processVideo = value ? true : false;
     }
 
     get includeURLs() {
-        return this.settings.includeURLs || this.defaultValues.includeURLs;
+        return this.globalSettings.includeURLs || this.defaultValues.includeURLs;
     }
 
     set includeURLs(value) {
-        Array.isArray(value) && (this.settings.includeURLs = value);
+        Array.isArray(value) && (this.globalSettings.includeURLs = value);
     }
 
     get excludeURLs() {
-        return this.settings.excludeURLs || this.defaultValues.excludeURLs;
+        return this.globalSettings.excludeURLs || this.defaultValues.excludeURLs;
     }
 
     set excludeURLs(value) {
-        Array.isArray(value) && (this.settings.excludeURLs = value);
+        Array.isArray(value) && (this.globalSettings.excludeURLs = value);
     }
 
     static async load() {
-        let result = await chrome.storage.sync.get('settings');
-        return new LoafishingSettings(result.settings);
+        return new LoafishingSettings(
+            (await chrome.storage.sync.get('global')).global,
+            (await chrome.storage.sync.get('local')).local,
+        );
     }
 
-    async save() {
-        return await chrome.storage.sync.set({ settings: this.settings });
+    async saveAll() {
+        return await chrome.storage.sync.set({
+            global: this.globalSettings,
+            local: this.localSettings,
+        });
+    }
+
+    async saveGlobal() {
+        return await chrome.storage.sync.set({ global: this.globalSettings });
+    }
+
+    async saveLocal() {
+        return await chrome.storage.sync.set({ local: this.localSettings });
     }
 }
