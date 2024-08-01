@@ -145,6 +145,10 @@ async function loafishing() {
     const isBackground = (el) => el.classList.contains('loafishing-bg');
     const isPipWindow = (el) => el.classList.contains('loafishing-pip');
     if (isPipEnable) {
+        const PIP_WINDOW_MIN_WIDTH = 120;
+        const PIP_WINDOW_MIN_HEIGHT = 120;
+        const PIP_WINDOW_MIN_TOP = 32;
+        const PIP_WINDOW_MIN_LEFT = 4;
         const pipStyleSheet = new CSSStyleSheet();
         pipStyleSheet.insertRule('img:hover { opacity: 100%!important; }', 0);
         pipStyleSheet.insertRule('video:hover { opacity: 100%!important; }', 0);
@@ -182,7 +186,8 @@ async function loafishing() {
         var $pipWindow;
         var $pipHandler;
         var $pipControlBar;
-        let $pipSwitcher, $pipClose, $pipExternal;
+        var $pipSwitcher, $pipClose, $pipExternal;
+        var pipZoomIn, pipZoomOut;
         let pipOptions = settings.pipOptions;
         let isMousedown = false;
         let startX, startY;
@@ -194,10 +199,10 @@ async function loafishing() {
             $pipClose = document.createElement('BUTTON');
             $pipExternal = document.createElement('BUTTON');
             $pipWindow.classList.add('loafishing-pip', 'loafishing-pip-win');
-            $pipWindow.style.width = `${Math.max(pipOptions.width, 120)}px`;
-            $pipWindow.style.height = `${Math.max(pipOptions.height, 120)}px`;
-            $pipWindow.style.top = `${Math.max(pipOptions.top, 32)}px`;
-            $pipWindow.style.left = `${Math.max(pipOptions.left, 4)}px`;
+            $pipWindow.style.width = `${Math.max(pipOptions.width, PIP_WINDOW_MIN_WIDTH)}px`;
+            $pipWindow.style.height = `${Math.max(pipOptions.height, PIP_WINDOW_MIN_HEIGHT)}px`;
+            $pipWindow.style.top = `${Math.max(pipOptions.top, PIP_WINDOW_MIN_TOP)}px`;
+            $pipWindow.style.left = `${Math.max(pipOptions.left, PIP_WINDOW_MIN_LEFT)}px`;
             $pipHandler.classList.add('loafishing-pip', 'loafishing-pip-handler');
             $pipWindow.appendChild($pipControlBar);
             $pipWindow.appendChild($pipHandler);
@@ -250,6 +255,16 @@ async function loafishing() {
             $pipControlBar.appendChild($pipSwitcher);
             $pipControlBar.appendChild($pipExternal);
             $pipControlBar.appendChild($pipClose);
+            pipZoomIn = () => {
+                if (!isPipEnable) return;
+                $pipWindow.style.width = `${$pipWindow.clientWidth + 10}px`;
+                $pipWindow.style.height = `${$pipWindow.clientHeight + 10}px`;
+            };
+            pipZoomOut = () => {
+                if (!isPipEnable) return;
+                $pipWindow.style.width = `${Math.max($pipWindow.clientWidth - 10, PIP_WINDOW_MIN_WIDTH)}px`;
+                $pipWindow.style.height = `${Math.max($pipWindow.clientHeight - 10, PIP_WINDOW_MIN_HEIGHT)}px`;
+            };
         };
         createPipWindow();
         document.body.addEventListener('mouseup', () => {
@@ -398,6 +413,69 @@ async function loafishing() {
         }
         restorePipWindow();
     }, { passive: true });
+
+    // shortcut handler
+    addEventListener('keydown', (event) => {
+        if (
+            event.metaKey ||
+            !event.isTrusted || 
+            ['Alt', 'Control', 'Shift', 'ScrollLock', 'CapsLock', 'NumLock', 'ContextMenu'].includes(event.key)
+        ) {
+            return;
+        }
+        for (let name in settings.keymap) {
+            let _key = settings.keymap[name];
+            if (!_key) continue;
+            let keys = _key.split('+');
+            let key = keys.pop();
+            let eventKey = event.key;
+            if (eventKey.length == 1) {
+                if (eventKey == '+') {
+                    eventKey = 'Plus';
+                } else if (eventKey == '-') {
+                    eventKey = 'Minus';
+                } else {
+                    eventKey = eventKey.toUpperCase();
+                }
+            }
+            if (eventKey != key) continue;
+
+            const matchKeys = () => {
+                let hotKeys = new Set();
+                if (event.altKey) {
+                    hotKeys.add('Alt');
+                }
+                if (event.ctrlKey) {
+                    hotKeys.add('Ctrl');
+                }
+                if (event.shiftKey) {
+                    hotKeys.add('Shift');
+                }
+                let pressedKeys = new Set(keys);
+                return hotKeys.isSubsetOf(pressedKeys) && pressedKeys.isSubsetOf(hotKeys);
+            };
+            if (!matchKeys()) continue;
+
+            switch (name) {
+                case 'toggle':
+                    if ($pipSwitcher && !event.repeat) $pipSwitcher.dispatchEvent(new Event('click'));
+                    break;
+                case 'open':
+                    if ($pipExternal && !event.repeat) $pipExternal.dispatchEvent(new Event('click'));
+                    break;
+                case 'close':
+                    if ($pipClose && !event.repeat) $pipClose.dispatchEvent(new Event('click'));
+                    break;
+                case 'zoomIn':
+                    if (pipZoomIn) pipZoomIn();
+                    break;
+                case 'zoomOut':
+                    if (pipZoomOut) pipZoomOut();
+                    break;
+            }
+            break;
+        }
+    });
 
     return true;
 }

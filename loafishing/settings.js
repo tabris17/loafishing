@@ -23,11 +23,29 @@ class LoafishingSettings {
             left: 0,
             top: 0,
         },
+        keymap: {
+            toggle: 'Alt+Q',
+            open: '',
+            close: '',
+            zoomIn: '',
+            zoomOut: '',
+        },
     };
     
     constructor (globalSettings, localSettings) {
         this.globalSettings = globalSettings || {};
         this.localSettings = localSettings || {};
+    }
+
+    get keymap() {
+        return this.globalSettings.keymap || this.defaultValues.keymap;
+    }
+
+    set keymap(value) {
+        if (!value) {
+            return;
+        }
+        this.globalSettings.keymap = Object.assign(this.keymap, value);    
     }
 
     get pipOptions() {
@@ -38,7 +56,7 @@ class LoafishingSettings {
         if (!value) {
             return;
         }
-        this.localSettings.pipOptions = Object.assign(this.pipOptions, value);    
+        this.localSettings.pipOptions = Object.assign(this.pipOptions, value);
     }
 
     get pipMode() {
@@ -132,6 +150,7 @@ class LoafishingSettings {
     }
 
     static async load() {
+        // todo: save local settings by hostname or url ?
         return new LoafishingSettings(
             (await chrome.storage.sync.get('global')).global,
             (await chrome.storage.sync.get('local')).local,

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<title>Loafishing</title>
+<style>
+html { font-size: 14px; user-select: none; }
+fieldset { border: 1px solid grey; margin: 0.5rem 0; padding: 0.5rem; }
+legend { padding: 0 0.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+td { border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0.5rem 0; line-height: 1.5rem; }
+td.right { text-align: right; }
+td.right > button { margin-left: 2px; }
+input { width: 10rem; border: 1px solid #aaa; background-color: #eee; }
+</style>
+<script src="settings.js"></script>
+</head>
+<body style="width: 50rem; margin: auto;">
+
+<h1 style="font-size: 1.25rem;">Set shortcut keys</h1>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Key</th>
+    </tr>
+    <tr>
+        <td>Turn on/off picture in picture preview</td>
+        <td class="right"><input readonly class="shortcut" id="shortcut-toggle"><button data-for="shortcut-toggle">Del</button></td>
+    </tr>
+    <tr>
+        <td>Open external picture in picture window</td>
+        <td class="right"><input readonly class="shortcut" id="shortcut-open"><button data-for="shortcut-open">Del</button></td>
+    </tr>
+    <tr>
+        <td>Close picture in picture window</td>
+        <td class="right"><input readonly class="shortcut" id="shortcut-close"><button data-for="shortcut-close">Del</button></td>
+    </tr>
+    <tr>
+        <td>Zoom in picture in picture window</td>
+        <td class="right"><input readonly class="shortcut" id="shortcut-zoom-in"><button data-for="shortcut-zoom-in">Del</button></td>
+    </tr>
+    <tr>
+        <td>Zoom out picture in picture window</td>
+        <td class="right"><input readonly class="shortcut" id="shortcut-zoom-out"><button data-for="shortcut-zoom-out">Del</button></td>
+    </tr>
+</table>
+<p style="margin: 1rem auto; text-align: center;">
+    <button id="save">OK</button>
+    <button id="cancel">Cancel</button>    
+</p>
+<script src="shortcut.js"></script>
+</body>
+</html>
